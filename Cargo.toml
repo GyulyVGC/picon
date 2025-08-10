@@ -11,6 +11,9 @@ keywords = ["process", "path", "icon"]
 categories = ["filesystem", "os"]
 include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
 
-[dependencies]
+[target.'cfg(target_os = "macos")'.dependencies]
 objc2-foundation = { version = "0.3.1", default-features = false, features = ["NSString"] }
 objc2-app-kit = { version = "0.3.1", default-features = false, features = ["NSWorkspace", "NSImage"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+shellexpand = "3.1.1"
