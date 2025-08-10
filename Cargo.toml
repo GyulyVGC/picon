@@ -1,0 +1,12 @@
+[package]
+name = "picon"
+version = "0.0.0"
+edition = "2024"
+authors = ["Giuliano Bellini <gyulyvgc99@gmail.com>"]
+description = "Get process icons on Windows, macOS, and Linux"
+readme = "README.md"
+repository = "https://github.com/GyulyVGC/picon"
+license = "MIT"
+keywords = ["process", "path", "icon"]
+categories = ["filesystem", "os"]
+include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
