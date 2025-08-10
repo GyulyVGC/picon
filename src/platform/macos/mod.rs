@@ -3,7 +3,7 @@ use objc2_app_kit::NSWorkspace;
 use objc2_foundation::NSString;
 
 #[allow(clippy::unnecessary_wraps)]
-pub(crate) fn get_icon_by_path(path: String) -> crate::Result<Icon> {
+pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let path = find_app_bundle_path(&path).unwrap_or(path);
 
     if let Some(tiff) = get_icon_tiff_bytes(&path) {
