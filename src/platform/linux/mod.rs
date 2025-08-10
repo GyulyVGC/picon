@@ -6,7 +6,7 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let path = Path::new(&path);
     let name = path.file_name()?.to_string_lossy().to_string();
     let bytes = load_icon_bytes(&name)?;
-    Ok(Icon::new(bytes))
+    Some(Icon::new(bytes))
 }
 
 fn load_icon_bytes(executable: &str) -> Option<Vec<u8>> {

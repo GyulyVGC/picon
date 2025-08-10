@@ -16,10 +16,10 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
         // let sub = image::imageops::crop_imm(&resized, 6, 6, 52, 52).to_image();
         // let (width, height) = sub.dimensions();
         // println!("--> Cropped icon size: {}x{}", width, height);
-        return Ok(Icon::new(tiff));
+        return Some(Icon::new(tiff));
     }
     // If we reach here, we didn't find a valid icon
-    Ok(Icon::default())
+    Some(Icon::default())
 }
 
 fn find_app_bundle_path(exe_path: &str) -> Option<String> {
