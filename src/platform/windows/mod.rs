@@ -50,13 +50,13 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     None
 }
 
-fn get_images_from_exe(executable_path: &str) -> Result<Vec<Vec<u8>>> {
+fn get_images_from_exe(executable_path: &str) -> Option<Vec<Vec<u8>>> {
     unsafe {
         let path_cstr = U16CString::from_str(executable_path)?;
         let path_pcwstr = PCWSTR(path_cstr.as_ptr());
         let num_icons_total = ExtractIconExW(path_pcwstr, -1, None, None, 0);
         if num_icons_total == 0 {
-            return Ok(Vec::new()); // No icons extracted
+            return Some(Vec::new()); // No icons extracted
         }
 
         let mut small_icons = vec![HICON::default(); num_icons_total as usize];
@@ -69,20 +69,20 @@ fn get_images_from_exe(executable_path: &str) -> Result<Vec<Vec<u8>>> {
         );
 
         if num_icons_fetched == 0 {
-            return Ok(Vec::new()); // No icons extracted
+            return Some(Vec::new()); // No icons extracted
         }
 
-        let images = small_icons
+        let images: Vec<Vec<u8>> = small_icons
             .iter()
             .map(|icon| convert_hicon_to_rgba_image(icon))
             .filter_map(|r| match r {
-                Ok(img) => Some(img),
-                Err(e) => {
+                Some(img) => Some(img),
+                None => {
                     eprintln!("Failed to convert HICON to RgbaImage: {:?}", e);
                     None
                 }
             })
-            .collect_vec();
+            .collect();
 
         small_icons
             .iter()
@@ -107,8 +107,8 @@ fn convert_hicon_to_rgba_image(hicon: &HICON) -> Option<Vec<u8>> {
             return None;
         }
         let hdc_screen = CreateCompatibleDC(None);
-        let hdc_mem = CreateCompatibleDC(hdc_screen);
-        let hbm_old = SelectObject(hdc_mem, icon_info.hbmColor);
+        let hdc_mem = CreateCompatibleDC(Some(hdc_screen));
+        let hbm_old = SelectObject(hdc_mem, icon_info.hbmColor.into());
 
         let mut bmp_info = BITMAPINFO {
             bmiHeader: BITMAPINFOHEADER {
@@ -145,8 +145,8 @@ fn convert_hicon_to_rgba_image(hicon: &HICON) -> Option<Vec<u8>> {
         SelectObject(hdc_mem, hbm_old);
         DeleteDC(hdc_mem);
         DeleteDC(hdc_screen);
-        DeleteObject(icon_info.hbmColor);
-        DeleteObject(icon_info.hbmMask);
+        DeleteObject(icon_info.hbmColor.into());
+        DeleteObject(icon_info.hbmMask.into());
 
         // bgra_to_rgba(buffer.as_mut_slice());
 
