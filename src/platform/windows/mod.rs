@@ -6,13 +6,13 @@ use std::path::Path;
 use windows::{
     core::PCWSTR,
     Win32::{
-        Foundation::{BOOL, HWND},
+        Foundation::{HWND},
         Graphics::Gdi::{
             BITMAP, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
             DeleteObject, GetDIBits, GetObjectW,
         },
         UI::{
-            Shell::ExtractIconExW,
+            Shell::{SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON},
             WindowsAndMessaging::{
                 DestroyIcon, GetDC, GetIconInfo, ReleaseDC,
                 HICON, ICONINFO,
@@ -25,31 +25,37 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     get_icon_bytes(&path).map(Icon::new)
 }
 
-pub fn get_icon_bytes(path: &Path) -> Option<Vec<u8>> {
+fn get_icon_bytes(path: &Path) -> Option<Vec<u8>> {
     unsafe {
-        // Convert path to null-terminated UTF-16
+        // UTF-16 path
         let wide: Vec<u16> = OsStr::new(path)
             .encode_wide()
             .chain(std::iter::once(0))
             .collect();
 
-        let mut large_icon = HICON::default();
+        let mut file_info = SHFILEINFOW::default();
 
-        let count = ExtractIconExW(
+        let res = SHGetFileInfoW(
             PCWSTR(wide.as_ptr()),
             0,
-            Some(&mut large_icon),
-            None,
-            1,
+            Some(&mut file_info),
+            std::mem::size_of::<SHFILEINFOW>() as u32,
+            SHGFI_ICON | SHGFI_LARGEICON,
         );
 
-        if count == 0 || large_icon.is_invalid() {
+        if res == 0 {
             return None;
         }
 
+        let hicon: HICON = file_info.hIcon;
+        if hicon.is_invalid() {
+            return None;
+        }
+
+        // Extract bitmap from icon
         let mut icon_info = ICONINFO::default();
-        if !GetIconInfo(large_icon, &mut icon_info).as_bool() {
-            DestroyIcon(large_icon);
+        if !GetIconInfo(hicon, &mut icon_info).as_bool() {
+            DestroyIcon(hicon);
             return None;
         }
 
@@ -57,10 +63,10 @@ pub fn get_icon_bytes(path: &Path) -> Option<Vec<u8>> {
         if GetObjectW(
             icon_info.hbmColor,
             std::mem::size_of::<BITMAP>() as i32,
-            &mut bmp as *mut _ as *mut _,
+            Some(&mut bmp as *mut _ as *mut _),
         ) == 0
         {
-            DestroyIcon(large_icon);
+            DestroyIcon(hicon);
             return None;
         }
 
@@ -98,7 +104,7 @@ pub fn get_icon_bytes(path: &Path) -> Option<Vec<u8>> {
 
         DeleteObject(icon_info.hbmColor);
         DeleteObject(icon_info.hbmMask);
-        DestroyIcon(large_icon);
+        DestroyIcon(hicon);
 
         if result == 0 {
             return None;
