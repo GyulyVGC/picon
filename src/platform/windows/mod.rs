@@ -13,6 +13,7 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let _ = std::fs::create_dir("output");
     let icon = windows_icons::get_icon_by_path(&path);
     if let Ok(icon) = icon {
+        println!("Successfully extracted icon for {path}");
         icon.save("output/icon.png").unwrap();
         return Some(Icon::new(icon.into_raw()));
     }
