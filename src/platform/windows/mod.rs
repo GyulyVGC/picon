@@ -10,9 +10,10 @@ use std::fmt::format;
 // use std::{mem, ptr, slice};
 
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
+    let _ = std::fs::create_dir("output");
     let icon = windows_icons::get_icon_by_path(&path);
     if let Ok(icon) = icon {
-        icon.save(format!("./icon.png")).unwrap();
+        icon.save("output/icon.png").unwrap();
         return Some(Icon::new(icon.into_raw()));
     }
     None
