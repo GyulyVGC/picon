@@ -1,5 +1,7 @@
 #![doc = include_str!("../README.md")]
 
+use iced::widget::image;
+
 mod platform;
 
 /// Indicates whether the current operating system is supported by this library.
@@ -11,20 +13,8 @@ pub const IS_OS_SUPPORTED: bool = cfg!(any(
     target_os = "windows"
 ));
 
-/// A process icon.
-#[derive(Eq, PartialEq, Hash, Debug, Clone)]
-pub struct Icon {
-    pub bytes: Vec<u8>,
-}
-
-impl Icon {
-    fn new(bytes: Vec<u8>) -> Self {
-        Self { bytes }
-    }
-}
-
 /// Returns the process icon given the path to an executable.
-pub fn get_icon_by_path<S: Into<String>>(path: S) -> Option<Icon> {
+pub fn get_icon_by_path<S: Into<String>>(path: S) -> Option<image::Handle> {
     platform::get_icon_by_path(path.into())
 }
 

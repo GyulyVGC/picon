@@ -1,11 +1,11 @@
-use crate::Icon;
+use iced::widget::image;
 use objc2_app_kit::NSWorkspace;
 use objc2_foundation::NSString;
 
-pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
+pub(crate) fn get_icon_by_path(path: String) -> Option<image::Handle> {
     let path = find_app_bundle_path(&path).unwrap_or(path);
 
-    get_icon_tiff_bytes(&path).map(Icon::new)
+    get_icon_tiff_bytes(&path).map(image::Handle::from_bytes)
 }
 
 fn find_app_bundle_path(exe_path: &str) -> Option<String> {
