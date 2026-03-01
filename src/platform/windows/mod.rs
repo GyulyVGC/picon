@@ -9,7 +9,7 @@ use crate::Icon;
 // use std::{mem, ptr, slice};
 
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
-    windows_icons::get_icon_base64_by_path(path).ok().map(Icon::new)
+    windows_icons::get_icon_by_path(path).ok().map(|rgba| Icon::new(rgba.into_raw()))
 }
 
 // pub fn extract_icon_as_handle(path: &str) -> Result<Handle, Box<dyn std::error::Error>> {
