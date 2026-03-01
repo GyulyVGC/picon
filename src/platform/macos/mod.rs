@@ -2,24 +2,10 @@ use crate::Icon;
 use objc2_app_kit::NSWorkspace;
 use objc2_foundation::NSString;
 
-#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let path = find_app_bundle_path(&path).unwrap_or(path);
 
-    if let Some(tiff) = get_icon_tiff_bytes(&path) {
-        // let img = image::load_from_memory(&tiff).expect("Failed to decode image");
-        // resize the image
-        // let resized = img.resize_exact(64, 64, image::imageops::FilterType::Lanczos3);
-        // let (width, height) = resized.dimensions();
-        // println!("--> Icon size: {}x{}", width, height);
-        // crop the image
-        // let sub = image::imageops::crop_imm(&resized, 6, 6, 52, 52).to_image();
-        // let (width, height) = sub.dimensions();
-        // println!("--> Cropped icon size: {}x{}", width, height);
-        return Some(Icon::new(tiff));
-    }
-    // If we reach here, we didn't find a valid icon
-    Some(Icon::default())
+    get_icon_tiff_bytes(&path).map(Icon::new)
 }
 
 fn find_app_bundle_path(exe_path: &str) -> Option<String> {
