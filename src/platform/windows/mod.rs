@@ -56,6 +56,7 @@ fn get_images_from_exe(executable_path: &str) -> Option<Vec<Vec<u8>>> {
         let path_pcwstr = PCWSTR(path_cstr.as_ptr());
         let num_icons_total = ExtractIconExW(path_pcwstr, -1, None, None, 0);
         if num_icons_total == 0 {
+            println!("Failed to extract icon");
             return Some(Vec::new()); // No icons extracted
         }
 
@@ -69,6 +70,7 @@ fn get_images_from_exe(executable_path: &str) -> Option<Vec<Vec<u8>>> {
         );
 
         if num_icons_fetched == 0 {
+            println!("Failed to fetch icon");
             return Some(Vec::new()); // No icons extracted
         }
 
