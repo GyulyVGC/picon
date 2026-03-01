@@ -19,8 +19,4 @@ objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWork
 shellexpand = "3.1.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-#windows-icons = "0.3.0"
-#winapi = "0.3.9"
-widestring = "1.2.1"
-windows = { version = "0.62", features = ["Win32_Graphics_Gdi", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
-image = "0.25.9"
+windows-icons = { git = "https://github.com/GyulyVGC/windows-icons" }
