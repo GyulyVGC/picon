@@ -13,6 +13,8 @@ use windows::Win32::UI::WindowsAndMessaging::DestroyIcon;
 use windows::Win32::UI::WindowsAndMessaging::GetIconInfoExW;
 use windows::Win32::UI::WindowsAndMessaging::HICON;
 use windows::Win32::UI::WindowsAndMessaging::ICONINFOEXW;
+use image::ImageBuffer;
+use image::RgbaImage;
 use crate::Icon;
 
 
@@ -35,20 +37,20 @@ use crate::Icon;
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let manifest_dir = std::env!("CARGO_MANIFEST_DIR");
     let _ = std::fs::create_dir(format!("{manifest_dir}/output"));
-    let icons = get_icon_by_manifest_path(&path);
+    let icons = get_images_from_exe(&path);
     if let Ok(icon) = icons.unwrap_or_default().into_iter().next() {
-        let file_name = std::path::Path::new(&path)
-            .file_stem()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown");
+        // let file_name = std::path::Path::new(&path)
+        //     .file_stem()
+        //     .and_then(|n| n.to_str())
+        //     .unwrap_or("unknown");
         println!("Successfully extracted icon for {path}");
-        icon.save(format!("{manifest_dir}/output/{file_name}.png")).unwrap();
-        return Some(Icon::new(icon.into_raw()));
+        // icon.save(format!("{manifest_dir}/output/{file_name}.png")).unwrap();
+        return Some(Icon::new(icon));
     }
     None
 }
 
-fn get_images_from_exe(executable_path: &str) -> Result<Vec<RgbaImage>> {
+fn get_images_from_exe(executable_path: &str) -> Result<Vec<Vec<u8>>> {
     unsafe {
         let path_cstr = U16CString::from_str(executable_path)?;
         let path_pcwstr = PCWSTR(path_cstr.as_ptr());
@@ -95,18 +97,14 @@ fn get_images_from_exe(executable_path: &str) -> Result<Vec<RgbaImage>> {
 
 // https://stackoverflow.com/a/23390460/11141271 -- How to extract 128x128 icon bitmap data from EXE in python
 // https://stackoverflow.com/a/22885412/11141271 -- Save HICON as a png (Java reference)
-fn convert_hicon_to_rgba_image(hicon: &HICON) -> Result<RgbaImage> {
+fn convert_hicon_to_rgba_image(hicon: &HICON) -> Option<Vec<u8>> {
     unsafe {
         let mut icon_info = ICONINFOEXW::default();
         icon_info.cbSize = std::mem::size_of::<ICONINFOEXW>() as u32;
 
         if !GetIconInfoExW(*hicon, &mut icon_info).as_bool() {
-            return Err(Error::from_win32().with_description(format!(
-                "icon • GetIconInfoExW: {} {}:{}",
-                file!(),
-                line!(),
-                column!()
-            )));
+            println!("Failed to get icon info");
+            return None;
         }
         let hdc_screen = CreateCompatibleDC(None);
         let hdc_mem = CreateCompatibleDC(hdc_screen);
@@ -140,12 +138,8 @@ fn convert_hicon_to_rgba_image(hicon: &HICON) -> Result<RgbaImage> {
             DIB_RGB_COLORS,
         ) == 0
         {
-            return Err(Error::from_win32().with_description(format!(
-                "GetDIBits: {} {}:{}",
-                file!(),
-                line!(),
-                column!()
-            )));
+            println!("Failed to get DIBits");
+            return None;
         }
         // Clean up
         SelectObject(hdc_mem, hbm_old);
@@ -154,10 +148,10 @@ fn convert_hicon_to_rgba_image(hicon: &HICON) -> Result<RgbaImage> {
         DeleteObject(icon_info.hbmColor);
         DeleteObject(icon_info.hbmMask);
 
-        bgra_to_rgba(buffer.as_mut_slice());
+        // bgra_to_rgba(buffer.as_mut_slice());
 
-        let image = ImageBuffer::from_raw(icon_info.xHotspot * 2, icon_info.yHotspot * 2, buffer)
-            .ok_or_else(|| Error::ImageContainerNotBigEnough)?;
-        return Ok(image);
+        // let image = ImageBuffer::from_raw(icon_info.xHotspot * 2, icon_info.yHotspot * 2, buffer)
+        //     .ok_or_else(|| Error::ImageContainerNotBigEnough)?;
+        return Some(buffer);
     }
 }
