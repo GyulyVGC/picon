@@ -1,19 +1,42 @@
+use widestring::U16CString;
+use windows::core::PCWSTR;
+use windows::Win32::Graphics::Gdi::CreateCompatibleDC;
+use windows::Win32::Graphics::Gdi::DeleteDC;
+use windows::Win32::Graphics::Gdi::DeleteObject;
+use windows::Win32::Graphics::Gdi::GetDIBits;
+use windows::Win32::Graphics::Gdi::SelectObject;
+use windows::Win32::Graphics::Gdi::BITMAPINFO;
+use windows::Win32::Graphics::Gdi::BITMAPINFOHEADER;
+use windows::Win32::Graphics::Gdi::DIB_RGB_COLORS;
+use windows::Win32::UI::Shell::ExtractIconExW;
+use windows::Win32::UI::WindowsAndMessaging::DestroyIcon;
+use windows::Win32::UI::WindowsAndMessaging::GetIconInfoExW;
+use windows::Win32::UI::WindowsAndMessaging::HICON;
+use windows::Win32::UI::WindowsAndMessaging::ICONINFOEXW;
 use crate::Icon;
-use std::fmt::format;
-// use winapi::um::wingdi::{ CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, RGBQUAD };
-// use winapi::um::shellapi::{ SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON };
-// use winapi::um::winbase::{ GlobalAlloc, GlobalLock, GHND, GlobalUnlock, GlobalFree };
-// use winapi::um::winuser::{ GetIconInfo, ICONINFO, DestroyIcon };
-// use winapi::shared::minwindef::DWORD;
-// use iced::widget::image::Handle;
-// use widestring::U16CString;
-// use std::{mem, ptr, slice};
+
+
+// pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
+//     let manifest_dir = std::env!("CARGO_MANIFEST_DIR");
+//     let _ = std::fs::create_dir(format!("{manifest_dir}/output"));
+//     let icon = windows_icons::get_icon_by_path(&path);
+//     if let Ok(icon) = icon {
+//         let file_name = std::path::Path::new(&path)
+//             .file_stem()
+//             .and_then(|n| n.to_str())
+//             .unwrap_or("unknown");
+//         println!("Successfully extracted icon for {path}");
+//         icon.save(format!("{manifest_dir}/output/{file_name}.png")).unwrap();
+//         return Some(Icon::new(icon.into_raw()));
+//     }
+//     None
+// }
 
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let manifest_dir = std::env!("CARGO_MANIFEST_DIR");
     let _ = std::fs::create_dir(format!("{manifest_dir}/output"));
-    let icon = windows_icons::get_icon_by_path(&path);
-    if let Ok(icon) = icon {
+    let icons = get_icon_by_manifest_path(&path);
+    if let Ok(icon) = icons.unwrap_or_default().into_iter().next() {
         let file_name = std::path::Path::new(&path)
             .file_stem()
             .and_then(|n| n.to_str())
@@ -25,93 +48,116 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     None
 }
 
-// pub fn extract_icon_as_handle(path: &str) -> Result<Handle, Box<dyn std::error::Error>> {
-//     unsafe {
-//         let mut shfi = SHFILEINFOW {
-//             hIcon: ptr::null_mut(), iIcon: 0,
-//             dwAttributes: 0,
-//             szDisplayName: [0; 260],
-//             szTypeName: [0; 80],
-//         };
-//
-//         SHGetFileInfoW(
-//             U16CString::from_str(path)?.as_ptr(),
-//             0,
-//             &mut shfi,
-//             mem::size_of::<SHFILEINFOW>() as DWORD,
-//             SHGFI_ICON | SHGFI_LARGEICON,
-//         );
-//
-//         if shfi.hIcon.is_null() {
-//             return Err("No icon found.".into());
-//         }
-//
-//         let mut icon_info = ICONINFO {
-//             fIcon: 0,
-//             xHotspot: 0,
-//             yHotspot: 0,
-//             hbmMask: ptr::null_mut(),
-//             hbmColor: ptr::null_mut(),
-//         };
-//         GetIconInfo(shfi.hIcon, &mut icon_info);
-//
-//         let hdc = CreateCompatibleDC(ptr::null_mut());
-//
-//         let bmp_info_header = BITMAPINFOHEADER {
-//             biSize: mem::size_of::<BITMAPINFOHEADER>() as DWORD,
-//             biWidth: 32,
-//             biHeight: -32, // Negative to indicate a top-down DIB
-//             biPlanes: 1,
-//             biBitCount: 32,
-//             biCompression: BI_RGB as DWORD,
-//             biSizeImage: 0,
-//             biXPelsPerMeter: 0,
-//             biYPelsPerMeter: 0,
-//             biClrUsed: 0,
-//             biClrImportant: 0,
-//         };
-//
-//         let mut bitmap_info = BITMAPINFO {
-//             bmiHeader: bmp_info_header,
-//             bmiColors: [RGBQUAD { rgbBlue: 0, rgbGreen: 0, rgbRed: 0, rgbReserved: 0 }; 1],
-//         };
-//
-//         let bitmap_memory = GlobalAlloc(GHND, (32 * 32 * 4) as usize);
-//         let bitmap_bits = GlobalLock(bitmap_memory) as *mut u8;
-//
-//         GetDIBits(
-//             hdc,
-//             icon_info.hbmColor,
-//             0,
-//             32,
-//             bitmap_bits as *mut _,
-//             &mut bitmap_info,
-//             0,
-//         );
-//
-//         GlobalUnlock(bitmap_memory);
-//         DeleteDC(hdc);
-//         DeleteObject(icon_info.hbmColor as _);
-//         DestroyIcon(shfi.hIcon);
-//
-//         let bitmap_slice = slice::from_raw_parts(bitmap_bits, (32 * 32 * 4) as usize).to_vec();
-//
-//         let mut rgba_slice = vec![0u8; bitmap_slice.len()];
-//         for i in 0..(32 * 32) {
-//             let b = bitmap_slice[i * 4 + 0];
-//             let g = bitmap_slice[i * 4 + 1];
-//             let r = bitmap_slice[i * 4 + 2];
-//             let a = bitmap_slice[i * 4 + 3];
-//             rgba_slice[i * 4 + 0] = r;
-//             rgba_slice[i * 4 + 1] = g;
-//             rgba_slice[i * 4 + 2] = b;
-//             rgba_slice[i * 4 + 3] = a;
-//         }
-//
-//         GlobalFree(bitmap_memory);
-//
-//         let handle = Handle::from_pixels(32, 32, rgba_slice);
-//
-//         return Ok(handle);
-//     }
-// }
+fn get_images_from_exe(executable_path: &str) -> Result<Vec<RgbaImage>> {
+    unsafe {
+        let path_cstr = U16CString::from_str(executable_path)?;
+        let path_pcwstr = PCWSTR(path_cstr.as_ptr());
+        let num_icons_total = ExtractIconExW(path_pcwstr, -1, None, None, 0);
+        if num_icons_total == 0 {
+            return Ok(Vec::new()); // No icons extracted
+        }
+
+        let mut small_icons = vec![HICON::default(); num_icons_total as usize];
+        let num_icons_fetched = ExtractIconExW(
+            path_pcwstr,
+            0,
+            None,
+            Some(small_icons.as_mut_ptr()),
+            num_icons_total,
+        );
+
+        if num_icons_fetched == 0 {
+            return Ok(Vec::new()); // No icons extracted
+        }
+
+        let images = small_icons
+            .iter()
+            .map(|icon| convert_hicon_to_rgba_image(icon))
+            .filter_map(|r| match r {
+                Ok(img) => Some(img),
+                Err(e) => {
+                    eprintln!("Failed to convert HICON to RgbaImage: {:?}", e);
+                    None
+                }
+            })
+            .collect_vec();
+
+        small_icons
+            .iter()
+            .filter(|icon| !icon.is_invalid())
+            .map(|icon| DestroyIcon(*icon))
+            .filter_map(|r| r.err())
+            .for_each(|e| eprintln!("Failed to destroy icon: {:?}", e));
+
+        Ok(images)
+    }
+}
+
+// https://stackoverflow.com/a/23390460/11141271 -- How to extract 128x128 icon bitmap data from EXE in python
+// https://stackoverflow.com/a/22885412/11141271 -- Save HICON as a png (Java reference)
+fn convert_hicon_to_rgba_image(hicon: &HICON) -> Result<RgbaImage> {
+    unsafe {
+        let mut icon_info = ICONINFOEXW::default();
+        icon_info.cbSize = std::mem::size_of::<ICONINFOEXW>() as u32;
+
+        if !GetIconInfoExW(*hicon, &mut icon_info).as_bool() {
+            return Err(Error::from_win32().with_description(format!(
+                "icon • GetIconInfoExW: {} {}:{}",
+                file!(),
+                line!(),
+                column!()
+            )));
+        }
+        let hdc_screen = CreateCompatibleDC(None);
+        let hdc_mem = CreateCompatibleDC(hdc_screen);
+        let hbm_old = SelectObject(hdc_mem, icon_info.hbmColor);
+
+        let mut bmp_info = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: icon_info.xHotspot as i32 * 2,
+                // https://discord.com/channels/1071140253181673492/1219071553929740328/1219359761389064273
+                // Rafael: ImageBuffer::from_raw expects top-down bitmap, so your biHeight in the BITMAPINFOHEADER should be negative.
+                biHeight: -(icon_info.yHotspot as i32 * 2),
+                biPlanes: 1,
+                biBitCount: 32,
+                biCompression: DIB_RGB_COLORS.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let mut buffer: Vec<u8> =
+            vec![0; (icon_info.xHotspot * 2 * icon_info.yHotspot * 2 * 4) as usize];
+
+        if GetDIBits(
+            hdc_mem,
+            icon_info.hbmColor,
+            0,
+            icon_info.yHotspot * 2,
+            Some(buffer.as_mut_ptr() as *mut _),
+            &mut bmp_info,
+            DIB_RGB_COLORS,
+        ) == 0
+        {
+            return Err(Error::from_win32().with_description(format!(
+                "GetDIBits: {} {}:{}",
+                file!(),
+                line!(),
+                column!()
+            )));
+        }
+        // Clean up
+        SelectObject(hdc_mem, hbm_old);
+        DeleteDC(hdc_mem);
+        DeleteDC(hdc_screen);
+        DeleteObject(icon_info.hbmColor);
+        DeleteObject(icon_info.hbmMask);
+
+        bgra_to_rgba(buffer.as_mut_slice());
+
+        let image = ImageBuffer::from_raw(icon_info.xHotspot * 2, icon_info.yHotspot * 2, buffer)
+            .ok_or_else(|| Error::ImageContainerNotBigEnough)?;
+        return Ok(image);
+    }
+}
