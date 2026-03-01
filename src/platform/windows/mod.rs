@@ -1,5 +1,5 @@
-use std::fmt::format;
 use crate::Icon;
+use std::fmt::format;
 // use winapi::um::wingdi::{ CreateCompatibleDC, DeleteDC, DeleteObject, GetDIBits, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, RGBQUAD };
 // use winapi::um::shellapi::{ SHGetFileInfoW, SHFILEINFOW, SHGFI_ICON, SHGFI_LARGEICON };
 // use winapi::um::winbase::{ GlobalAlloc, GlobalLock, GHND, GlobalUnlock, GlobalFree };
@@ -15,6 +15,7 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
         icon.save(format!("{}.png", path)).unwrap();
         return Some(Icon::new(icon.into_raw()));
     }
+    None
 }
 
 // pub fn extract_icon_as_handle(path: &str) -> Result<Handle, Box<dyn std::error::Error>> {
@@ -107,4 +108,3 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
 //         return Ok(handle);
 //     }
 // }
-
