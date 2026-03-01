@@ -12,8 +12,16 @@ categories = ["filesystem", "os"]
 include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2-foundation = { version = "0.3.1", default-features = false, features = ["NSString"] }
-objc2-app-kit = { version = "0.3.1", default-features = false, features = ["NSWorkspace", "NSImage"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSString"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWorkspace", "NSImage"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 shellexpand = "3.1.1"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.62", features = [
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+    "Win32_Foundation"
+] }
