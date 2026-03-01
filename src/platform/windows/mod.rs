@@ -12,7 +12,7 @@ use std::fmt::format;
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     let icon = windows_icons::get_icon_by_path(&path);
     if let Ok(icon) = icon {
-        icon.save(format!("{}.png", path)).unwrap();
+        icon.save(format!("icon.png")).unwrap();
         return Some(Icon::new(icon.into_raw()));
     }
     None
