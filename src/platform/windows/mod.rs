@@ -1,19 +1,33 @@
 use crate::Icon;
+use std::ffi::OsStr;
+use std::os::windows::ffi::OsStrExt;
+use std::path::Path;
+
 use windows::{
+    core::PCWSTR,
     Win32::{
-        Foundation::*,
-        Graphics::Gdi::*,
-        UI::{Shell::*, WindowsAndMessaging::*},
+        Foundation::{BOOL, HWND},
+        Graphics::Gdi::{
+            BITMAP, BITMAPINFO, BITMAPINFOHEADER, BI_RGB, DIB_RGB_COLORS,
+            DeleteObject, GetDIBits, GetObjectW,
+        },
+        UI::{
+            Shell::ExtractIconExW,
+            WindowsAndMessaging::{
+                DestroyIcon, GetDC, GetIconInfo, ReleaseDC,
+                HICON, ICONINFO,
+            },
+        },
     },
 };
-use std::{ffi::OsStr, os::windows::ffi::OsStrExt, path::Path};
 
 pub(crate) fn get_icon_by_path(path: String) -> Option<Icon> {
     get_icon_bytes(&path).map(Icon::new)
 }
 
-fn get_icon_bytes(path: &str) -> Option<Vec<u8>> {
+pub fn get_icon_bytes(path: &Path) -> Option<Vec<u8>> {
     unsafe {
+        // Convert path to null-terminated UTF-16
         let wide: Vec<u16> = OsStr::new(path)
             .encode_wide()
             .chain(std::iter::once(0))
@@ -21,7 +35,7 @@ fn get_icon_bytes(path: &str) -> Option<Vec<u8>> {
 
         let mut large_icon = HICON::default();
 
-        let extracted = ExtractIconExW(
+        let count = ExtractIconExW(
             PCWSTR(wide.as_ptr()),
             0,
             Some(&mut large_icon),
@@ -29,45 +43,66 @@ fn get_icon_bytes(path: &str) -> Option<Vec<u8>> {
             1,
         );
 
-        if extracted == 0 {
+        if count == 0 || large_icon.is_invalid() {
             return None;
         }
 
         let mut icon_info = ICONINFO::default();
-        GetIconInfo(large_icon, &mut icon_info);
+        if !GetIconInfo(large_icon, &mut icon_info).as_bool() {
+            DestroyIcon(large_icon);
+            return None;
+        }
 
         let mut bmp = BITMAP::default();
-        GetObjectW(
+        if GetObjectW(
             icon_info.hbmColor,
             std::mem::size_of::<BITMAP>() as i32,
             &mut bmp as *mut _ as *mut _,
-        );
+        ) == 0
+        {
+            DestroyIcon(large_icon);
+            return None;
+        }
 
-        let mut buffer = vec![0u8; (bmp.bmWidth * bmp.bmHeight * 4) as usize];
+        let width = bmp.bmWidth;
+        let height = bmp.bmHeight;
+
+        let mut buffer = vec![0u8; (width * height * 4) as usize];
 
         let hdc = GetDC(HWND(0));
-        GetDIBits(
+
+        let mut bmi = BITMAPINFO {
+            bmiHeader: BITMAPINFOHEADER {
+                biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
+                biWidth: width,
+                biHeight: -height, // top-down
+                biPlanes: 1,
+                biBitCount: 32,
+                biCompression: BI_RGB.0 as u32,
+                ..Default::default()
+            },
+            ..Default::default()
+        };
+
+        let result = GetDIBits(
             hdc,
             icon_info.hbmColor,
             0,
-            bmp.bmHeight as u32,
+            height as u32,
             Some(buffer.as_mut_ptr() as *mut _),
-            &mut BITMAPINFO {
-                bmiHeader: BITMAPINFOHEADER {
-                    biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32,
-                    biWidth: bmp.bmWidth,
-                    biHeight: -bmp.bmHeight,
-                    biPlanes: 1,
-                    biBitCount: 32,
-                    biCompression: BI_RGB as u32,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
+            &mut bmi,
             DIB_RGB_COLORS,
         );
 
         ReleaseDC(HWND(0), hdc);
+
+        DeleteObject(icon_info.hbmColor);
+        DeleteObject(icon_info.hbmMask);
+        DestroyIcon(large_icon);
+
+        if result == 0 {
+            return None;
+        }
 
         Some(buffer)
     }
