@@ -1,6 +1,7 @@
 use crate::IconHandle;
-use objc2_app_kit::NSWorkspace;
-use objc2_foundation::NSString;
+use objc2_app_kit::{NSCompositingOperation, NSImage, NSWorkspace};
+use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
+use objc2::AnyThread;
 
 pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
     let path = find_app_bundle_path(&path).unwrap_or(path);
@@ -40,8 +41,20 @@ fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
     // Get icon as NSImage
     let icon = ws.iconForFile(&ns_path);
 
+    let resized = NSImage::initWithSize(NSImage::alloc(), NSSize::new(64.0, 64.0));
+    resized.lockFocus();
+
+    let rect = NSRect { origin: NSPoint { x: 0.0, y: 0.0 }, size: NSSize::new(64.0, 64.0) };
+    icon.drawInRect_fromRect_operation_fraction(
+        rect,
+        NSRect { origin: NSPoint { x: 0.0, y: 0.0 }, size: icon.size() },
+        NSCompositingOperation::Copy,
+        1.0,
+    );
+    resized.unlockFocus();
+
     // Get TIFF representation (NSData)
-    let tiff_data = icon.TIFFRepresentation()?;
+    let tiff_data = resized.TIFFRepresentation()?;
 
     // Extract raw bytes from NSData
     Some(tiff_data.to_vec())
