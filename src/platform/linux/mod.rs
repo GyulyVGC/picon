@@ -10,6 +10,7 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
     let icon_opt = icons.find_default_icon(&icon_name, 64, 1);
 
     if let Some(icon) = icon_opt {
+        println!("Successfully extracted icon for {icon_name}: {icon:?}");
         let path = icon.path();
         return match icon.file_type() {
             icon::FileType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
