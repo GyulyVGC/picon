@@ -2,10 +2,7 @@ use crate::IconHandle;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-pub(crate) fn get_icon(program: String) -> Option<IconHandle> {
-    let path = Path::new(&path);
-    let name = path.file_stem()?.to_string_lossy().to_string();
-
+pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
     let icons = icon::Icons::new();
     let icon_opt = icons.find_default_icon(&name, 64, 1);
 
