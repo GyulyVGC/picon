@@ -20,7 +20,7 @@ objc2-foundation = { version = "0.3", default-features = false, features = ["NSS
 objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWorkspace", "NSImage"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-shellexpand = "3.1.1"
+icon = "0.2.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-icons = { git = "https://github.com/GyulyVGC/windows-icons" }

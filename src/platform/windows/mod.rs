@@ -12,7 +12,9 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<IconHandle> {
         println!("Successfully extracted icon for {path}");
         // icon.save(format!("{manifest_dir}/output/{file_name}.png")).unwrap();
         // return Some(Icon::new(icon.into_raw()));
-        return Some(IconHandle::Image(iced::widget::image::Handle::from_rgba(w, h, icon)));
+        return Some(IconHandle::Image(iced::widget::image::Handle::from_rgba(
+            w, h, icon,
+        )));
     }
     None
 }

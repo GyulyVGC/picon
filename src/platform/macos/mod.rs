@@ -31,20 +31,18 @@ fn find_app_bundle_path(exe_path: &str) -> Option<String> {
 }
 
 fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
-    unsafe {
-        // Convert Rust str -> NSString
-        let ns_path = NSString::from_str(app_path);
+    // Convert Rust str -> NSString
+    let ns_path = NSString::from_str(app_path);
 
-        // Get shared NSWorkspace
-        let ws = NSWorkspace::sharedWorkspace();
+    // Get shared NSWorkspace
+    let ws = NSWorkspace::sharedWorkspace();
 
-        // Get icon as NSImage
-        let icon = ws.iconForFile(&ns_path);
+    // Get icon as NSImage
+    let icon = ws.iconForFile(&ns_path);
 
-        // Get TIFF representation (NSData)
-        let tiff_data = icon.TIFFRepresentation()?;
+    // Get TIFF representation (NSData)
+    let tiff_data = icon.TIFFRepresentation()?;
 
-        // Extract raw bytes from NSData
-        Some(tiff_data.to_vec())
-    }
+    // Extract raw bytes from NSData
+    Some(tiff_data.to_vec())
 }
