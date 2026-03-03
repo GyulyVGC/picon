@@ -19,8 +19,8 @@ pub enum IconHandle {
 }
 
 /// Returns the process icon given the path to an executable.
-pub fn get_icon_by_path<S: Into<String>>(path: S) -> Option<IconHandle> {
-    platform::get_icon_by_path(path.into())
+pub fn get_icon<S: Into<String>>(path: S) -> Option<IconHandle> {
+    platform::get_icon(path.into())
 }
 
 #[cfg(test)]

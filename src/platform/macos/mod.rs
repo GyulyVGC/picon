@@ -2,7 +2,7 @@ use crate::IconHandle;
 use objc2_app_kit::NSWorkspace;
 use objc2_foundation::NSString;
 
-pub(crate) fn get_icon_by_path(path: String) -> Option<IconHandle> {
+pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
     let path = find_app_bundle_path(&path).unwrap_or(path);
 
     get_icon_tiff_bytes(&path)

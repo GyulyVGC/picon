@@ -1,4 +1,4 @@
-pub(crate) use target_os::get_icon_by_path;
+pub(crate) use target_os::get_icon;
 
 /* ---------- windows ---------- */
 #[cfg(target_os = "windows")]

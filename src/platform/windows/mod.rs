@@ -1,6 +1,6 @@
 use crate::IconHandle;
 
-pub(crate) fn get_icon_by_path(path: String) -> Option<IconHandle> {
+pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
     // let manifest_dir = std::env!("CARGO_MANIFEST_DIR");
     // let _ = std::fs::create_dir(format!("{manifest_dir}/output"));
     let icon = windows_icons::get_icon_by_path(&path);
