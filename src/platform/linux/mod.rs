@@ -12,8 +12,8 @@ pub(crate) fn get_icon_by_path(path: String) -> Option<IconHandle> {
     if let Some(icon) = icon_opt {
         let path = icon.path();
         return match icon.file_type() {
-            icon::FileType::Png => IconHandle::Image(iced::widget::image::Handle::from_path(path)),
-            icon::FileType::Svg => IconHandle::Svg(iced::widget::svg::Handle::from_path(path)),
+            icon::FileType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(path))),
+            icon::FileType::Svg => Some(IconHandle::Svg(iced::widget::svg::Handle::from_path(path))),
             _ => None,
         };
     }
