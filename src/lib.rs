@@ -12,6 +12,7 @@ pub const IS_OS_SUPPORTED: bool = cfg!(any(
 ));
 
 /// An Iced image or SVG handle of a process icon.
+#[derive(Clone)]
 pub enum IconHandle {
     Image(iced::widget::image::Handle),
     Svg(iced::widget::svg::Handle),
