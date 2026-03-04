@@ -40,3 +40,52 @@ jobs:
         run: cargo clippy -- -D warnings
       - name: test
         run: cargo test --verbose -- --nocapture
+
+  rust-bsd:
+    name: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: freebsd
+            version: "15.0"
+            rust_install: |
+              sudo pkg update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
+          - os: openbsd
+            version: "7.8"
+            rust_install: |
+              sudo pkg_add rust rust-rustfmt rust-clippy
+          - os: netbsd
+            version: "10.1"
+            rust_install: |
+              sudo pkgin update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run CI
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: ${{ matrix.os }}
+          version: ${{ matrix.version }}
+          run: |
+            set -e
+            ${{ matrix.rust_install }}
+
+            echo "Running cargo fmt check..."
+            cargo fmt --all -- --check
+
+            echo "Running cargo build..."
+            cargo build --verbose
+
+            echo "Running cargo clippy..."
+            cargo clippy -- -D warnings
+
+            echo "Running cargo tests..."
+            cargo test --verbose -- --nocapture
