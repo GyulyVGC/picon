@@ -1,5 +1,4 @@
 use crate::IconHandle;
-use objc2::__framework_prelude::Bool;
 use objc2_app_kit::{NSCompositingOperation, NSImage, NSWorkspace};
 use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
 
@@ -12,14 +11,14 @@ pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
 
 fn find_app_bundle_path(exe_path: &str) -> Option<String> {
     let mut current = std::path::Path::new(exe_path);
-    let mut last_app_dir: Option<std::path::PathBuf> = None;
+    let mut last_app_dir: Option<String> = None;
 
-    // Walk up the path, including the input
+    // walk up the path (including the input)
     loop {
-        if let Some(file_name) = current.file_name()
-            && file_name.to_string_lossy().ends_with(".app")
+        if let Some(file_ext) = current.extension()
+            && file_ext == "app"
         {
-            last_app_dir = Some(current.to_path_buf());
+            last_app_dir = Some(current.to_string_lossy().to_string());
         }
 
         match current.parent() {
@@ -28,17 +27,17 @@ fn find_app_bundle_path(exe_path: &str) -> Option<String> {
         }
     }
 
-    last_app_dir.map(|p| p.to_string_lossy().into_owned())
+    last_app_dir
 }
 
 fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
-    // Convert Rust str -> NSString
+    // convert Rust str to NSString
     let ns_path = NSString::from_str(app_path);
 
-    // Get shared NSWorkspace
+    // get shared NSWorkspace
     let ws = NSWorkspace::sharedWorkspace();
 
-    // Get icon as NSImage
+    // get icon as NSImage
     let icon = ws.iconForFile(&ns_path);
 
     let original_size = icon.size();
@@ -46,6 +45,7 @@ fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
         return None;
     }
 
+    // cut 10% of the icon from each side to remove paddings
     let crop_rect = NSRect {
         origin: NSPoint {
             x: original_size.width * 0.1,
@@ -57,7 +57,8 @@ fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
         },
     };
 
-    let drawing_block = block2::RcBlock::new(move |dst_rect: NSRect| -> Bool {
+    // create a drawing block that draws the icon into a 64x64 rect, cropping it to remove paddings
+    let drawing_block = block2::RcBlock::new(move |dst_rect: NSRect| {
         icon.drawInRect_fromRect_operation_fraction(
             NSRect {
                 origin: NSPoint {
@@ -74,18 +75,19 @@ fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
             1.0,
         );
 
-        Bool::YES
+        true.into()
     });
 
+    // create a new NSImage with the drawing block, which will resize and crop the icon
     let resized = NSImage::imageWithSize_flipped_drawingHandler(
         NSSize::new(64.0, 64.0),
         false,
         &drawing_block,
     );
 
-    // Get TIFF representation (NSData)
+    // get TIFF representation (NSData)
     let tiff_data = resized.TIFFRepresentation()?;
 
-    // Extract raw bytes from NSData
+    // extract raw bytes from NSData
     Some(tiff_data.to_vec())
 }
