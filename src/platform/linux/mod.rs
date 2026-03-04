@@ -7,17 +7,9 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
     let icon_name = icon_name_opt.unwrap_or(name);
 
     // first check if the icon name is an absolute path to an icon file
-    let icon_path = PathBuf::from(&icon_name);
+    let icon_path = Path::new(&icon_name);
     if icon_path.is_absolute() {
-        return match icon_path.extension() {
-            Some(ext) if ext == "png" => Some(IconHandle::Image(
-                iced::widget::image::Handle::from_path(icon_path),
-            )),
-            Some(ext) if ext == "svg" => Some(IconHandle::Svg(
-                iced::widget::svg::Handle::from_path(icon_path),
-            )),
-            _ => None,
-        };
+        return icon_handle(icon_path);
     }
 
     // try to find the icon using the icon crate
@@ -26,15 +18,7 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
 
     if let Some(icon) = icon_opt {
         let path = icon.path();
-        return match icon.file_type() {
-            icon::FileType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
-                path,
-            ))),
-            icon::FileType::Svg => {
-                Some(IconHandle::Svg(iced::widget::svg::Handle::from_path(path)))
-            }
-            icon::FileType::Xpm => None,
-        };
+        return icon_handle(path);
     }
 
     None
@@ -100,4 +84,16 @@ fn find_icon_name(name: &str) -> Option<String> {
         ret_val = None;
     }
     None
+}
+
+fn icon_handle(path: &Path) -> Option<IconHandle> {
+    match path.extension() {
+        Some(ext) if ext == "png" => Some(IconHandle::Image(
+            iced::widget::image::Handle::from_path(path),
+        )),
+        Some(ext) if ext == "svg" => {
+            Some(IconHandle::Svg(iced::widget::svg::Handle::from_path(path)))
+        }
+        _ => None,
+    }
 }
