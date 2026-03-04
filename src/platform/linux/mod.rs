@@ -43,7 +43,6 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
 fn find_icon_name(name: &str) -> Option<String> {
     let mut dirs = Vec::new();
     if let Some(home_dir) = dirs::home_dir().map(|p| p.to_string_lossy().into_owned()) {
-        println!("Full home icon path: {home_dir}/.local/share/applications");
         dirs.push(PathBuf::from(&format!(
             "{home_dir}/.local/share/applications"
         )));
@@ -71,8 +70,23 @@ fn find_icon_name(name: &str) -> Option<String> {
                     {
                         ret_val = Some(icon_name);
                     }
-                    if let Some(exec_cmd) = line.strip_prefix("Exec=") {
-                        if exec_cmd.contains(name) {
+                    if let Some(exec_cmd) = line
+                        .strip_prefix("Exec=")
+                        .map(|s| s.replace('\"', "").replace('\\', "").trim().to_string())
+                    {
+                        let parts: Vec<&str> = exec_cmd.split_whitespace().collect();
+
+                        if parts.iter().any(|part| {
+                            let part_name = Path::new(part)
+                                .file_name()
+                                .and_then(|s| s.to_str())
+                                .unwrap_or("");
+                            if name.len() < 15 {
+                                part_name == name
+                            } else {
+                                part_name.contains(name)
+                            }
+                        }) {
                             found = true;
                         }
                     }
