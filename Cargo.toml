@@ -22,7 +22,7 @@ block2 = "0.6"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 icon = "0.2"
-shellexpand = "3.1.2"
+dirs = "6.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-icons = { git = "https://github.com/GyulyVGC/windows-icons" }
