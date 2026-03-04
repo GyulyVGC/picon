@@ -6,13 +6,14 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
     let icon_name_opt = find_icon_name(&name);
     let icon_name = icon_name_opt.unwrap_or(name);
 
-    let icons = icon::Icons::new();
-    let icon_opt = icons.find_default_icon(&icon_name, 64, 1);
+    let icons: Vec<_> = linicon::lookup_icon(icon_name).with_scale(1).collect();
+    for linicon in &icons {
+        println!("Found icon for {icon_name}: {icon:?}\n");
+    }
 
-    if let Some(icon) = icon_opt {
-        println!("Successfully extracted icon for {icon_name}: {icon:?}");
-        let path = icon.path();
-        return match icon.file_type() {
+    if let Some(Ok(linicon)) = icons.get(0) {
+        let path = icon.path;
+        return match icon.icon_type {
             icon::FileType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
                 path,
             ))),
