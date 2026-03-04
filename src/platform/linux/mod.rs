@@ -7,7 +7,7 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
     let icon_name = icon_name_opt.unwrap_or(name);
 
     // first check if the icon name is an absolute path to an icon file
-    let icon_path = PathBuf::new(&icon_name);
+    let icon_path = PathBuf::from(&icon_name);
     if icon_path.is_absolute() {
         return match icon_path.extension() {
             Some(ext) if ext == "png" => Some(IconHandle::Image(
