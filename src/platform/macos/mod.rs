@@ -1,7 +1,7 @@
 use crate::IconHandle;
+use objc2::__framework_prelude::Bool;
 use objc2_app_kit::{NSCompositingOperation, NSImage, NSWorkspace};
 use objc2_foundation::{NSPoint, NSRect, NSSize, NSString};
-use objc2::AnyThread;
 
 pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
     let path = find_app_bundle_path(&path).unwrap_or(path);
@@ -41,17 +41,47 @@ fn get_icon_tiff_bytes(app_path: &str) -> Option<Vec<u8>> {
     // Get icon as NSImage
     let icon = ws.iconForFile(&ns_path);
 
-    let resized = NSImage::initWithSize(NSImage::alloc(), NSSize::new(64.0, 64.0));
-    resized.lockFocus();
+    let original_size = icon.size();
+    if original_size.width == 0.0 || original_size.height == 0.0 {
+        return None;
+    }
 
-    let rect = NSRect { origin: NSPoint { x: 0.0, y: 0.0 }, size: NSSize::new(64.0, 64.0) };
-    icon.drawInRect_fromRect_operation_fraction(
-        rect,
-        NSRect { origin: NSPoint { x: 0.0, y: 0.0 }, size: icon.size() },
-        NSCompositingOperation::Copy,
-        1.0,
+    let crop_rect = NSRect {
+        origin: NSPoint {
+            x: original_size.width * 0.1,
+            y: original_size.height * 0.1,
+        },
+        size: NSSize {
+            width: original_size.width * 0.8,
+            height: original_size.height * 0.8,
+        },
+    };
+
+    let drawing_block = block2::RcBlock::new(move |dst_rect: NSRect| -> Bool {
+        icon.drawInRect_fromRect_operation_fraction(
+            NSRect {
+                origin: NSPoint {
+                    x: dst_rect.origin.x,
+                    y: dst_rect.origin.y,
+                },
+                size: NSSize {
+                    width: dst_rect.size.width,
+                    height: dst_rect.size.height,
+                },
+            },
+            crop_rect,
+            NSCompositingOperation::Copy,
+            1.0,
+        );
+
+        Bool::YES
+    });
+
+    let resized = NSImage::imageWithSize_flipped_drawingHandler(
+        NSSize::new(64.0, 64.0),
+        false,
+        &drawing_block,
     );
-    resized.unlockFocus();
 
     // Get TIFF representation (NSData)
     let tiff_data = resized.TIFFRepresentation()?;
