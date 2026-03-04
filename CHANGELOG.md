@@ -4,6 +4,6 @@ All releases with the relative changes are documented in this file.
 
 ## [UNRELEASED] - yyyy-mm-dd
 ### Added
-- Support for Windows, Linux and macOS
+- Support for Windows, Linux, macOS, and BSD-based systems
 - ...
  

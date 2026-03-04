@@ -4,11 +4,14 @@ mod platform;
 
 /// Indicates whether the current operating system is supported by this library.
 ///
-/// Currently, the supported operating systems are macOS, Linux, and Windows.
+/// Currently, the supported operating systems are Windows, Linux, macOS, FreeBSD, OpenBSD, and NetBSD.
 pub const IS_OS_SUPPORTED: bool = cfg!(any(
-    target_os = "macos",
+    target_os = "windows",
     target_os = "linux",
-    target_os = "windows"
+    target_os = "macos",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd"
 ));
 
 /// An Iced image or SVG handle of a process icon.

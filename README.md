@@ -5,11 +5,20 @@
 [![Docs](https://docs.rs/picon/badge.svg)](https://docs.rs/picon/latest/)
 [![CI](https://github.com/gyulyvgc/picon/workflows/CI/badge.svg)](https://github.com/GyulyVGC/picon/actions/)
 
-**Get process icons on Windows, macOS, and Linux.**
+**Get process icons in a cross-platform way.**
+
+Supports Windows, Linux, macOS, and BSD-based systems.
 
 ***
 
 > [!WARNING]
 > 
-> This library is intended for use in [Sniffnet](https://github.com/GyulyVGC/sniffnet), and this is the reason why icons are returned as [Iced](https://github.com/iced-rs/iced) `Handle` objects. <br> 
+> The library is intended for use in [Sniffnet](https://github.com/GyulyVGC/sniffnet), and this is the reason why icons are returned as [Iced](https://github.com/iced-rs/iced) `Handle` objects.
+>  
 > Feel free to take inspiration from this library and adapt it to your needs, but be aware that it's not designed to be used as a general-purpose crate.
+
+***
+
+### Acknowledgements
+
+- [`icon`](https://crates.io/crates/icon) crate for simplifying icon retrieval on Linux and BSD-based systems
