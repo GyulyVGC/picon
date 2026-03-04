@@ -66,10 +66,10 @@ fn find_icon_name(name: &str) -> Option<String> {
                 for line in content.lines() {
                     if let Some(icon_name) = line
                         .strip_prefix("Icon=")
-                        .map(|s| s.replace('\"', "").replace('\\', "").trim())
+                        .map(|s| s.replace('\"', "").replace('\\', "").trim().to_string())
                         && !icon_name.is_empty()
                     {
-                        ret_val = Some(icon_name.to_string());
+                        ret_val = Some(icon_name);
                     }
                     if let Some(exec_cmd) = line.strip_prefix("Exec=") {
                         if exec_cmd.contains(name) {
