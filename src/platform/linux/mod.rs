@@ -8,16 +8,16 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
 
     let icons: Vec<_> = linicon::lookup_icon(icon_name).with_scale(1).collect();
     for linicon in &icons {
-        println!("Found icon for {icon_name}: {icon:?}\n");
+        println!("Found icon for {icon_name}: {linicon:?}\n");
     }
 
     if let Some(Ok(linicon)) = icons.get(0) {
-        let path = icon.path;
-        return match icon.icon_type {
-            icon::FileType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
+        let path = linicon.path;
+        return match linicon.icon_type {
+            linicon::IconType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
                 path,
             ))),
-            icon::FileType::Svg => {
+            linicon::IconType::Svg => {
                 Some(IconHandle::Svg(iced::widget::svg::Handle::from_path(path)))
             }
             _ => None,
