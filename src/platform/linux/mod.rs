@@ -14,10 +14,10 @@ pub(crate) fn get_icon(name: String) -> Option<IconHandle> {
     if let Some(Ok(linicon)) = icons.get(0) {
         let path = linicon.path;
         return match linicon.icon_type {
-            linicon::IconType::Png => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
+            linicon::IconType::PNG => Some(IconHandle::Image(iced::widget::image::Handle::from_path(
                 path,
             ))),
-            linicon::IconType::Svg => {
+            linicon::IconType::SVG => {
                 Some(IconHandle::Svg(iced::widget::svg::Handle::from_path(path)))
             }
             _ => None,
