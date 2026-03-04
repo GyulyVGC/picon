@@ -18,9 +18,9 @@ pub enum IconHandle {
     Svg(iced::widget::svg::Handle),
 }
 
-/// Returns the process icon given the path to an executable.
-pub fn get_icon<S: Into<String>>(path: S) -> Option<IconHandle> {
-    platform::get_icon(path.into())
+/// Returns the process icon given the path to an executable (Windows and mcOS) or its name (other platforms).
+pub fn get_icon<S: Into<String>>(info: S) -> Option<IconHandle> {
+    platform::get_icon(info.into())
 }
 
 #[cfg(test)]

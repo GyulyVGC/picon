@@ -12,22 +12,38 @@ mod macos;
 #[cfg(target_os = "macos")]
 use macos as target_os;
 
-/* ----------- linux ----------- */
-#[cfg(target_os = "linux")]
+/* -------- linux & bsd -------- */
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd"
+))]
 mod linux;
-#[cfg(target_os = "linux")]
+#[cfg(any(
+    target_os = "linux",
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd"
+))]
 use linux as target_os;
 
 /* ----------- other ----------- */
 #[cfg(all(
     not(target_os = "linux"),
     not(target_os = "macos"),
-    not(target_os = "windows")
+    not(target_os = "windows"),
+    not(target_os = "freebsd"),
+    not(target_os = "openbsd"),
+    not(target_os = "netbsd")
 ))]
-mod bsd;
+mod unsupported;
 #[cfg(all(
     not(target_os = "linux"),
     not(target_os = "macos"),
-    not(target_os = "windows")
+    not(target_os = "windows"),
+    not(target_os = "freebsd"),
+    not(target_os = "openbsd"),
+    not(target_os = "netbsd")
 ))]
-use bsd as target_os;
+use unsupported as target_os;
