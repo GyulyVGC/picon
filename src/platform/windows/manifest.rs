@@ -61,8 +61,6 @@ fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
     let mut package_logo: Option<String> = None;
     let mut reader = Reader::from_str(manifest);
 
-    let mut inside_logo = false;
-
     loop {
         match reader.read_event() {
             Ok(Event::Empty(ref e) | Event::Start(ref e)) => {
@@ -79,20 +77,13 @@ fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
                         }
                     }
                 } else if name == b"Logo" {
-                    inside_logo = true;
-                }
-            }
-            Ok(Event::Text(ref t)) if inside_logo => {
-                if let Ok(text) = t.unescape() {
-                    let logo = text.trim().to_string();
-                    if !logo.is_empty() {
-                        package_logo = Some(logo);
+                    if let Ok(text) = reader.read_text(e.to_end().name()) {
+                        let logo = text.trim().to_string();
+                        if !logo.is_empty() {
+                            package_logo = Some(logo);
+                        }
                     }
                 }
-                inside_logo = false;
-            }
-            Ok(Event::End(ref e)) if e.local_name().as_ref() == b"Logo" => {
-                inside_logo = false;
             }
             Ok(Event::Eof) => break,
             Err(_) => break,
@@ -163,6 +154,7 @@ fn find_best_variant(icon_path: &Path, base_size: Option<u32>) -> Option<PathBuf
     variants
         .into_iter()
         .min_by_key(|(_, px)| px.map(|s| s.abs_diff(TARGET_PX)).unwrap_or(u32::MAX))
+        .map(|(path, _)| path)
 }
 
 /// Extract pixel size from a `targetsize-NNN` segment in the filename.
