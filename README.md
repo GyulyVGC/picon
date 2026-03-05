@@ -22,3 +22,4 @@ Supports Windows, Linux, macOS, and BSD-based systems.
 ### Acknowledgements
 
 - [`icon`](https://crates.io/crates/icon) crate for simplifying icon retrieval on Linux and BSD-based systems
+- [`windows-icons`](https://crates.io/crates/windows-icons) crate for inspiring icon retrieval on Windows
