@@ -74,10 +74,10 @@ fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
                         }
                     }
                 } else if name == b"Logo"
-                    && let Ok(text) = reader
+                    && let Ok(logo) = reader
                         .read_text(e.to_end().name())
                         .map(|t| t.trim().to_string())
-                    && !text.is_empty()
+                    && !logo.is_empty()
                 {
                     package_logo = Some(logo);
                 }
