@@ -25,4 +25,7 @@ icon = "0.2"
 dirs = "6.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows-icons = { git = "https://github.com/GyulyVGC/windows-icons" }
+windows = { version = "0.62", features = [
+    "Win32_Graphics_Gdi",
+    "Win32_UI_WindowsAndMessaging",
+] }
