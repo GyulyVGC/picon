@@ -52,7 +52,7 @@ fn resolve_from_manifest(manifest_dir: &Path) -> Option<PathBuf> {
     None
 }
 
-/// Collect logo path candidates from the manifest, with `VisualElements first.
+/// Collect logo path candidates from the manifest, with `VisualElements` first.
 fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
     let mut visual_elements = Vec::new();
     let mut package_logo: Option<String> = None;
@@ -60,23 +60,22 @@ fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
 
     loop {
         match reader.read_event() {
-            Ok(Event::Empty(ref e) | Event::Start(ref e)) => {
-                let name = e.local_name();
-                let name = name.as_ref();
-
-                if name == b"VisualElements" {
-                    for (attr, base) in [
-                        (b"Square44x44Logo".as_slice(), 44u32),
-                        (b"Square150x150Logo".as_slice(), 150),
-                    ] {
-                        if let Some(value) = get_attr(e, attr) {
-                            visual_elements.push((value, Some(base)));
-                        }
+            Ok(Event::Empty(ref e) | Event::Start(ref e))
+                if e.local_name().as_ref() == b"VisualElements" =>
+            {
+                for (attr, base) in [
+                    (b"Square44x44Logo".as_slice(), 44u32),
+                    (b"Square150x150Logo".as_slice(), 150),
+                ] {
+                    if let Some(value) = get_attr(e, attr) {
+                        visual_elements.push((value, Some(base)));
                     }
-                } else if name == b"Logo"
-                    && let Ok(logo) = reader
-                        .read_text(e.to_end().name())
-                        .map(|t| t.trim().to_string())
+                }
+            }
+            Ok(Event::Start(ref e)) if e.local_name().as_ref() == b"Logo" => {
+                if let Ok(logo) = reader
+                    .read_text(e.to_end().name())
+                    .map(|t| t.trim().to_string())
                     && !logo.is_empty()
                 {
                     package_logo = Some(logo);
@@ -108,7 +107,7 @@ fn get_attr(e: &quick_xml::events::BytesStart, name: &[u8]) -> Option<String> {
 ///
 /// UWP assets use two naming conventions:
 /// - `Logo.targetsize-64.png` — pixel size is given directly
-/// - `Logo.scale-150.png` — pixel size = `base_size × scale / 100
+/// - `Logo.scale-150.png` — pixel size = `base_size` × scale / 100
 fn find_best_variant(icon_path: &Path, base_size: Option<u32>) -> Option<PathBuf> {
     let parent = icon_path.parent()?;
     let stem = icon_path.file_stem()?.to_str()?;
