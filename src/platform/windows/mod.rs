@@ -8,6 +8,6 @@ pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
     if let Some(handle) = manifest::get_icon(&path) {
         return Some(handle);
     }
-    // Fall back to PrivateExtractIconsW (works for regular executables)
+    // Fall back to ExtractIconExW (works for regular executables)
     hicon::get_icon(&path)
 }

@@ -62,7 +62,8 @@ unsafe fn get_hicon(file_path: &Path) -> Option<HICON> {
 
     let count = unsafe { ExtractIconExW(path, 0, Some(&raw mut hicon_large), None, 1) };
 
-    if count == 0 || hicon_large.0.is_null() {
+    // ExtractIconExW returns 0 if no icons found, u32::MAX on error
+    if count == 0 || count == u32::MAX || hicon_large.0.is_null() {
         return None;
     }
 
