@@ -9,9 +9,8 @@ use windows::Win32::Graphics::Gdi::{
     BI_RGB, BITMAP, BITMAPINFO, BITMAPINFOHEADER, DIB_RGB_COLORS, DeleteObject, GetDC, GetDIBits,
     GetObjectW, HBITMAP, HDC, HGDIOBJ, ReleaseDC,
 };
-use windows::Win32::UI::WindowsAndMessaging::{
-    DestroyIcon, GetIconInfo, HICON, PrivateExtractIconsW,
-};
+use windows::Win32::UI::Shell::ExtractIconExW;
+use windows::Win32::UI::WindowsAndMessaging::{DestroyIcon, GetIconInfo, HICON};
 
 // RAII wrappers for automatic resource cleanup
 
@@ -57,34 +56,17 @@ pub(super) fn get_icon(exe_path: &str) -> Option<IconHandle> {
 
 unsafe fn get_hicon(file_path: &Path) -> Option<HICON> {
     let wide: Vec<u16> = OsStr::new(file_path).encode_wide().chain(Some(0)).collect();
+    let path = windows::core::PCWSTR(wide.as_ptr());
 
-    // PrivateExtractIconsW requires a fixed [u16; 260] (MAX_PATH) buffer.
-    // Reserve the last element for the null terminator.
-    let mut filename_buf = [0u16; 260];
-    let copy_len = wide.len().min(filename_buf.len() - 1);
-    filename_buf[..copy_len].copy_from_slice(&wide[..copy_len]);
+    let mut hicon_large = HICON::default();
 
-    let mut hicons = [HICON::default()];
-    let mut icon_id = 0u32;
+    let count = unsafe { ExtractIconExW(path, 0, Some(&raw mut hicon_large), None, 1) };
 
-    let count = unsafe {
-        PrivateExtractIconsW(
-            &filename_buf,
-            0,
-            64,
-            64,
-            Some(&mut hicons),
-            Some(&raw mut icon_id),
-            0,
-        )
-    };
-
-    // PrivateExtractIconsW returns u32::MAX on failure, 0 if no icons found
-    if count == 0 || count == u32::MAX || hicons[0].0.is_null() {
+    if count == 0 || hicon_large.0.is_null() {
         return None;
     }
 
-    Some(hicons[0])
+    Some(hicon_large)
 }
 
 unsafe fn hicon_to_rgba(icon: HICON) -> Option<(u32, u32, Vec<u8>)> {

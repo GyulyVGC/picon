@@ -9,5 +9,6 @@ pub(crate) fn get_icon(path: String) -> Option<IconHandle> {
         return Some(handle);
     }
     // Fall back to PrivateExtractIconsW (works for regular executables)
+    println!("Manifest-based extraction failed, trying PrivateExtractIconsW for path: {}", path);
     hicon::get_icon(&path)
 }
