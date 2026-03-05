@@ -74,7 +74,7 @@ unsafe fn get_hicon(file_path: &Path) -> Option<HICON> {
             64,
             64,
             Some(&mut hicons),
-            Some(&mut icon_id),
+            Some(&raw mut icon_id),
             0,
         )
     };
@@ -149,7 +149,7 @@ unsafe fn hicon_to_rgba(icon: HICON) -> Option<(u32, u32, Vec<u8>)> {
             0,
             height,
             Some(buf.as_mut_ptr().cast()),
-            &mut bitmap_info,
+            &raw mut bitmap_info,
             DIB_RGB_COLORS,
         )
     };
@@ -159,7 +159,7 @@ unsafe fn hicon_to_rgba(icon: HICON) -> Option<(u32, u32, Vec<u8>)> {
 
     // BGRA -> RGBA
     let byte_len = buf.len().checked_mul(mem::size_of::<u32>())?;
-    let rgba = unsafe { std::slice::from_raw_parts(buf.as_ptr() as *const u8, byte_len) }
+    let rgba = unsafe { std::slice::from_raw_parts(buf.as_ptr().cast::<u8>(), byte_len) }
         .chunks_exact(4)
         .flat_map(|px| [px[2], px[1], px[0], px[3]])
         .collect();

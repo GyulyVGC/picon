@@ -26,10 +26,7 @@ fn find_manifest_dir(exe_path: &str) -> Option<PathBuf> {
         if dir.join("AppxManifest.xml").exists() {
             return Some(dir.to_path_buf());
         }
-        dir = match dir.parent() {
-            Some(p) => p,
-            None => return None,
-        };
+        dir = dir.parent()?;
     }
 }
 
@@ -55,7 +52,7 @@ fn resolve_from_manifest(manifest_dir: &Path) -> Option<PathBuf> {
     None
 }
 
-/// Collect logo path candidates from the manifest, with VisualElements first.
+/// Collect logo path candidates from the manifest, with `VisualElements first.
 fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
     let mut visual_elements = Vec::new();
     let mut package_logo: Option<String> = None;
@@ -76,17 +73,16 @@ fn extract_logo_candidates(manifest: &str) -> Vec<(String, Option<u32>)> {
                             visual_elements.push((value, Some(base)));
                         }
                     }
-                } else if name == b"Logo" {
-                    if let Ok(text) = reader.read_text(e.to_end().name()) {
-                        let logo = text.trim().to_string();
-                        if !logo.is_empty() {
-                            package_logo = Some(logo);
-                        }
-                    }
+                } else if name == b"Logo"
+                    && let Ok(text) = reader
+                        .read_text(e.to_end().name())
+                        .map(|t| t.trim().to_string())
+                    && !text.is_empty()
+                {
+                    package_logo = Some(logo);
                 }
             }
-            Ok(Event::Eof) => break,
-            Err(_) => break,
+            Ok(Event::Eof) | Err(_) => break,
             _ => {}
         }
     }
@@ -112,7 +108,7 @@ fn get_attr(e: &quick_xml::events::BytesStart, name: &[u8]) -> Option<String> {
 ///
 /// UWP assets use two naming conventions:
 /// - `Logo.targetsize-64.png` — pixel size is given directly
-/// - `Logo.scale-150.png` — pixel size = base_size × scale / 100
+/// - `Logo.scale-150.png` — pixel size = `base_size × scale / 100
 fn find_best_variant(icon_path: &Path, base_size: Option<u32>) -> Option<PathBuf> {
     let parent = icon_path.parent()?;
     let stem = icon_path.file_stem()?.to_str()?;
@@ -160,13 +156,13 @@ fn find_best_variant(icon_path: &Path, base_size: Option<u32>) -> Option<PathBuf
 /// Extract pixel size from a `targetsize-NNN` segment in the filename.
 fn extract_targetsize(name: &str) -> Option<u32> {
     let after = name.split("targetsize-").nth(1)?;
-    let num: String = after.chars().take_while(|c| c.is_ascii_digit()).collect();
+    let num: String = after.chars().take_while(char::is_ascii_digit).collect();
     num.parse().ok()
 }
 
 /// Extract scale factor from a `scale-NNN` segment in the filename.
 fn extract_scale(name: &str) -> Option<u32> {
     let after = name.split("scale-").nth(1)?;
-    let num: String = after.chars().take_while(|c| c.is_ascii_digit()).collect();
+    let num: String = after.chars().take_while(char::is_ascii_digit).collect();
     num.parse().ok()
 }
